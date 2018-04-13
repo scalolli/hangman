@@ -1,1 +1,1 @@
-Hangman game exercises from haskell-book chapter-13
+### Hangman game from [haskell-book](http://haskellbook.com/) chapter-13
