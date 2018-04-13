@@ -40,8 +40,8 @@ module Main where
                 in l >= minWordLength
                   && l < maxWordLength
 
-  randomWord :: IO String
-  randomWord = gameWords >>= randomWord
+  randomWord' :: IO String
+  randomWord' = gameWords >>= randomWord
 
   data Puzzle =
           Puzzle String [Maybe Char] [Char]
@@ -53,11 +53,46 @@ module Main where
             ++ " Guessed so far: " ++ guessed
 
   freshPuzzle :: String -> Puzzle
-  freshPuzzle = map (const Nothing)
+  freshPuzzle w = Puzzle w (map (const Nothing) w) []
 
   charInWord :: Puzzle -> Char -> Bool
-  charInWord (Puzzle word _ _) c = word !! c
+  charInWord (Puzzle word _ _) c = c `elem` word
 
   alreadyGuessed :: Puzzle -> Char -> Bool
-  alreadyGuessed = undefined
+  alreadyGuessed (Puzzle _ _ guessed) c = c `elem` guessed
+
+  renderPuzzleChar :: Maybe Char -> Char
+  renderPuzzleChar (Just c) = c
+  renderPuzzleChar        _ = '_'
+
+  fillInCharacter :: Puzzle -> Char -> Puzzle
+  fillInCharacter (Puzzle word filledInSoFar s) c =
+    Puzzle word newFilledInSoFar (c:s)
+    where zipper guessed wordChar guessChar =
+                if wordChar == guessed
+                 then Just wordChar
+                 else guessChar
+
+          newFilledInSoFar = zipWith (zipper c) word filledInSoFar
+
+
+  handleGuess :: Puzzle -> Char -> IO Puzzle
+  handleGuess puzzle guess = do
+      putStrLn $ "Your guess was: " ++ [guess]
+      case (charInWord puzzle guess, alreadyGuessed puzzle guess) of
+        (_, True) -> do
+          putStrLn "You already guess that\
+                    \ character pick \
+                    \ somehting else!"
+          return puzzle
+        (True, _) -> do
+          putStrLn "This character was in the word\
+                   \ filling in the word\
+                   \ accordingly"
+          return (fillInCharacter puzzle guess)
+
+        (False, _) -> do
+          putStrLn "This character wasn't in\
+                   \ the word, try again."
+          return (fillInCharacter puzzle guess)
 
