@@ -94,13 +94,17 @@ module Main where
 
 
   gameOver :: Puzzle -> IO ()
-  gameOver (Puzzle wordToGuess _ guessed) =
-      if (length guessed) > 7 then
+  gameOver p@(Puzzle wordToGuess _ guessed) =
+      if (countIncorrectGuesses p) > (length wordToGuess) then
         do putStrLn "You lose!"
            putStrLn $ "The word was: " ++ wordToGuess
            exitSuccess
       else
         return ()
+
+  countIncorrectGuesses :: Puzzle -> Int
+  countIncorrectGuesses (Puzzle word _ guessed) =
+      foldr (\a b -> if (not $ a `elem` word) then (b + 1) else b) 0 guessed
 
   gameWin :: Puzzle -> IO ()
   gameWin (Puzzle _ guessedSoFar _) =
